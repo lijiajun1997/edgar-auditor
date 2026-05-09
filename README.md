@@ -51,7 +51,7 @@ python skills/edgar-auditor/scripts/edgar.py lookup AAPL
 |---------|-------------|
 | `init` | Download SEC ticker database |
 | `lookup <ticker\|name>` | Find company by ticker or name |
-| `filings <ticker> [opts]` | List filings (`--form`, `--from`, `--to`, `--limit`, `--all`) |
+| `filings <ticker> [opts]` | List filings (`--form`, `--from`, `--to`, `--limit`) |
 | `download <ticker> <accession>` | Download filing files + build index |
 | `toc <ticker> <form> <accession>` | Show section structure |
 | `section <t> <f> <acc> <id>` | Read one section's content |
