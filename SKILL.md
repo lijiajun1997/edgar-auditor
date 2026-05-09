@@ -4,11 +4,11 @@ description: >
   SEC EDGAR filing query tool for US stock auditors and financial analysts.
   Look up any US-listed company's SEC filings, download and convert to Markdown,
   search by keyword or financial concept (revenue recognition, audit fees, VIE,
-  related party, CAM, going concern, etc.), extract cover pages and financial
-  statements (f-pages). Supports 10-K, 10-Q, 20-F, 6-K, 8-K, F-1, S-1 and more.
+  related party, CAM, going concern, etc.), extract financial statements (f-pages).
+  Supports 10-K, 10-Q, 20-F, 6-K, 8-K, F-1, S-1 and more.
   Use this skill whenever the user asks about SEC filings, EDGAR data, 10-K,
   10-Q, 20-F, annual reports, quarterly reports, financial statements, audit
-  reports, MD&A, f-pages, or any US publicly traded company filing information,
+  reports, MD&A, f-pages, f-page, or any US publicly traded company filing information,
   even if they just mention a ticker symbol and want financial data.
 ---
 
@@ -33,7 +33,6 @@ lookup → {ticker, cik}     download → {toc, filing_dir} toc → {section_id}
 filings → {accession,      toc → {sections[]}           section → {content}
           form, date}                                   search → {matches[]}
                                                        concept → {matches[]}
-                                                       fpage → {cover page MD}
                                                        fpages → {financial stmts MD}
 ```
 
@@ -52,7 +51,6 @@ before you can search, read sections, or extract f-pages from it.
 | `section TICKER FORM ACC ID` | Read one section's full content | Extract specific data (revenue note, audit report, etc.) |
 | `search TICKER KEYWORD` | Keyword search across sections | Find where a topic is discussed |
 | `concept [KEY]` | Search by financial concept | Find audit-relevant sections by category |
-| `fpage TICKER FORM ACC` | Extract cover page as MD | Get company info, FY, auditor from face page |
 | `fpages TICKER FORM ACC` | Extract financial statements as MD | Get full F-pages (audit report → end of filing) |
 
 ## Composing Commands
@@ -80,7 +78,7 @@ download BABA <accession>
   → section BABA 20-F <acc> <section_id>           # read the hit
 ```
 
-### Pattern 4: "Get all financial statements"
+### Pattern 4: "Get all financial statements (f-pages)"
 
 ```
 filings BABA --form 20-F
@@ -142,17 +140,16 @@ python skills/edgar-auditor/scripts/edgar.py concept                            
 python skills/edgar-auditor/scripts/edgar.py concept revenue_recognition --ticker AAPL
 ```
 
-### fpage / fpages
+### fpages
 
 ```bash
-python skills/edgar-auditor/scripts/edgar.py fpage BABA 20-F 0001577552-25-000001    # cover page
-python skills/edgar-auditor/scripts/edgar.py fpages BABA 20-F 0001577552-25-000001   # financial statements
+python skills/edgar-auditor/scripts/edgar.py fpages BABA 20-F 0001577552-25-000001
 ```
 
-- `fpage`: Cover page (before TABLE OF CONTENTS) — company name, FY, auditor, etc.
-- `fpages`: Complete financial statements (from audit report to end). For 20-F: F-1, F-2, etc.
+Extracts complete financial statements (from audit report to end of filing). For 20-F: F-1, F-2, etc.
+Auto-downloads the filing if not cached.
 
-Both auto-download the filing if not cached.
+Output: `{ticker, form, accession, fiscal_year, content_length, content}`
 
 ## What to Know
 
@@ -166,3 +163,4 @@ Both auto-download the filing if not cached.
 - **Concept list**: `revenue_recognition`, `audit_fees`, `cam`, `going_concern`, `vie`,
   `related_party`, `icfr`, `risk_factors`, `accounting_policy`, `goodwill_impairment`,
   `cybersecurity`, `segment`. Run `concept` without args to see all.
+- **f-pages**: User mentions "f-page", "fpages", or "f-pages" all mean the `fpages` command.

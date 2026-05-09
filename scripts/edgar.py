@@ -13,8 +13,7 @@ Commands:
   section <t> <f> <acc> <sec_id>    Read section content
   search <ticker> <keyword>         Keyword search
   concept [key] [options]           Concept search / list
-  fpage <ticker> <form> <accession> Extract cover page
-  fpages <ticker> <form> <accession> Extract financial statements
+  fpages <ticker> <form> <accession> Extract financial statements (f-pages)
 """
 
 import argparse
@@ -441,22 +440,6 @@ def cmd_concept(args):
     _out(result)
 
 
-def cmd_fpage(args):
-    ticker, form, accession = args.ticker.upper().strip(), args.form, args.accession.strip()
-    result = _ensure_downloaded(ticker, form, accession)
-    if not result:
-        return
-    _, _, primary_doc = result
-
-    from edgar_lib.fpage_extractor import extract_fpage_md
-    md, fy = extract_fpage_md(ticker, form, accession, primary_doc)
-    if md:
-        _out({"ticker": ticker, "form": form, "accession": accession,
-              "fiscal_year": fy, "content_length": len(md), "content": md})
-    else:
-        _err("Cover page extraction failed. Filing may not have a standard cover page.")
-
-
 def cmd_fpages(args):
     ticker, form, accession = args.ticker.upper().strip(), args.form, args.accession.strip()
     result = _ensure_downloaded(ticker, form, accession)
@@ -530,12 +513,6 @@ def main():
     p.add_argument("--ticker", help="Filter by ticker")
     p.add_argument("--form", help="Filter by form type")
     p.set_defaults(func=cmd_concept)
-
-    p = sub.add_parser("fpage", help="Extract cover page")
-    p.add_argument("ticker", help="Stock ticker symbol")
-    p.add_argument("form", help="Form type")
-    p.add_argument("accession", help="Accession number")
-    p.set_defaults(func=cmd_fpage)
 
     p = sub.add_parser("fpages", help="Extract financial statements (F-pages)")
     p.add_argument("ticker", help="Stock ticker symbol")

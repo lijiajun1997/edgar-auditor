@@ -15,8 +15,7 @@
 - **Section Navigation** — Browse TOC, read individual sections by ID
 - **Keyword Search** — Full-text search across filing sections
 - **Concept Search** — 12 built-in financial concepts (audit fees, VIE, CAM, revenue recognition...)
-- **Cover Page Extraction** — Extract face page as clean Markdown
-- **Financial Statements** — Extract complete F-pages (audit report through end of filing)
+- **Financial Statements (f-pages)** — Extract complete F-pages (audit report through end of filing)
 
 Supported forms: **10-K, 10-Q, 20-F, 6-K, 8-K, F-1, S-1** and more.
 
@@ -25,7 +24,7 @@ Supported forms: **10-K, 10-Q, 20-F, 6-K, 8-K, F-1, S-1** and more.
 ### Prerequisites
 
 - Python 3.10+
-- [edgar-crawler-src](https://github.com/) project (core parsing engine)
+- Pre-installed: `requests`, `beautifulsoup4`, `lxml`, `markdownify`
 
 ### Setup as Claude Code Skill
 
@@ -37,8 +36,6 @@ cp -r edgar-auditor ~/.claude/skills/
 
 That's it. Bundled `data/tickers.json` (10,380 SEC tickers) seeds the cache automatically on first run.
 
-> **Note**: Dependencies (requests, beautifulsoup4, lxml, markdownify) should be pre-installed in your environment. Do NOT install them unless you see `ModuleNotFoundError`.
-
 ### Verify
 
 ```bash
@@ -47,23 +44,6 @@ python skills/edgar-auditor/scripts/edgar.py lookup AAPL
 ```
 
 ## Usage
-
-### Data Flow
-
-The tool operates in 3 layers — each command's output feeds into the next:
-
-```
-LAYER 1: DISCOVER          LAYER 2: ACCESS              LAYER 3: EXTRACT
-─────────────────          ──────────────               ───────────────
-lookup → {ticker, cik}     download → {toc, filing_dir} toc → {section_id}
-filings → {accession,      toc → {sections[]}           section → {content}
-          form, date}                                   search → {matches[]}
-                                                       concept → {matches[]}
-                                                       fpage → {cover page MD}
-                                                       fpages → {financial stmts MD}
-```
-
-**Key rule**: `download` is the gateway to Layer 3. You must download a filing before you can search, read sections, or extract f-pages.
 
 ### Command Reference
 
@@ -77,8 +57,7 @@ filings → {accession,      toc → {sections[]}           section → {content
 | `section <t> <f> <acc> <id>` | Read one section's content |
 | `search <ticker> <keyword>` | Keyword search across sections |
 | `concept [key]` | Search by financial concept (12 built-in) |
-| `fpage <ticker> <form> <acc>` | Extract cover page as Markdown |
-| `fpages <ticker> <form> <acc>` | Extract financial statements as Markdown |
+| `fpages <ticker> <form> <acc>` | Extract financial statements (f-pages) as Markdown |
 
 ### Examples
 
@@ -104,10 +83,7 @@ python skills/edgar-auditor/scripts/edgar.py search BABA "variable interest" --f
 # Search by financial concept
 python skills/edgar-auditor/scripts/edgar.py concept audit_fees --ticker BABA --form 20-F
 
-# Extract cover page
-python skills/edgar-auditor/scripts/edgar.py fpage BABA 20-F 0000950170-24-063767
-
-# Extract full financial statements
+# Extract full financial statements (f-pages)
 python skills/edgar-auditor/scripts/edgar.py fpages BABA 20-F 0000950170-24-063767
 ```
 
@@ -132,27 +108,32 @@ python skills/edgar-auditor/scripts/edgar.py fpages BABA 20-F 0000950170-24-0637
 
 ## Architecture
 
+Fully self-contained — all code is bundled in the skill:
+
 ```
 edgar-auditor/
 ├── SKILL.md              # Claude Code skill definition
+├── data/tickers.json     # 10,380 SEC ticker-CIK mapping
 ├── scripts/
-│   └── edgar.py          # Main CLI tool (571 lines)
+│   ├── edgar.py          # CLI entry point
+│   └── edgar_lib/        # Bundled library (no external deps)
+│       ├── config.py
+│       ├── db.py
+│       ├── sec_client.py
+│       ├── html_to_md.py
+│       ├── ticker_sync.py
+│       ├── concept_map.py
+│       ├── section_indexer.py
+│       ├── section_search.py
+│       └── fpage_extractor.py
 └── references/
-    └── concepts.md       # Financial concepts reference
+    └── concepts.md
 ```
-
-The CLI tool imports from [edgar-crawler-src](https://github.com/) which provides:
-- `sec_client` — SEC EDGAR HTTP client with rate limiting
-- `section_indexer` — XBRL + HTML section indexing
-- `section_search` — TOC, keyword search, concept search
-- `fpage_extractor` — Cover page and financial statements extraction
-- `html_to_md` — SEC HTML to Markdown conversion
 
 ## Requirements
 
 - Python >= 3.10
 - Pre-installed: `requests`, `beautifulsoup4`, `lxml`, `markdownify`
-- [edgar-crawler-src](https://github.com/) project (core engine)
 
 ## License
 
