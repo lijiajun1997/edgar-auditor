@@ -18,7 +18,7 @@ Query any US-listed company's SEC filings via a single CLI tool. All output is J
 
 ## Environment
 
-All dependencies (requests, beautifulsoup4, lxml, markdownify) are pre-installed.
+Fully self-contained. All code is bundled in `scripts/edgar_lib/` — no external project dependency.
 The bundled `data/tickers.json` (10,380 SEC tickers) seeds the cache automatically on first run.
 Do NOT attempt to install dependencies unless a command fails with `ModuleNotFoundError`.
 

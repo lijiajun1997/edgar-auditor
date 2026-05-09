@@ -31,41 +31,23 @@ if sys.platform == "win32":
 
 warnings.filterwarnings("ignore")
 
-# ── Path setup ──────────────────────────────────────────────────────────────
+# ── Path setup: add scripts/ to sys.path so edgar_lib is importable ────────
 
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-_candidates = [
-    os.environ.get("EDGAR_PROJECT_DIR", ""),
-    os.path.join(os.path.expanduser("~"), "Desktop", "edgar", "edgar-crawler-src"),
-    os.path.normpath(os.path.join(
-        _SCRIPT_DIR, "..", "..", "..", "Desktop", "edgar", "edgar-crawler-src"
-    )),
-]
+sys.path.insert(0, _SCRIPT_DIR)
 
-PROJECT_DIR = None
-for _c in _candidates:
-    if _c and os.path.isfile(os.path.join(_c, "config.py")):
-        PROJECT_DIR = _c
-        break
+# ── Imports (all from bundled edgar_lib) ────────────────────────────────────
 
-if not PROJECT_DIR:
-    print(json.dumps({"error": "Cannot find edgar-crawler-src project.", "hint": "Set EDGAR_PROJECT_DIR env var."}))
-    sys.exit(1)
-
-sys.path.insert(0, PROJECT_DIR)
-
-# ── Project imports ─────────────────────────────────────────────────────────
-
-from db import (
+from edgar_lib.db import (
     load_tickers, save_tickers, load_filings_index, save_filings_index,
     get_filing_dir,
 )
-from sec_client import (
+from edgar_lib.sec_client import (
     fetch_all_tickers, fetch_company_filings, fetch_filing_directory, download_file,
 )
-from html_to_md import convert_html_to_md
-from ticker_sync import lookup_cik
-from concept_map import CONCEPTS, get_all_concepts
+from edgar_lib.html_to_md import convert_html_to_md
+from edgar_lib.ticker_sync import lookup_cik
+from edgar_lib.concept_map import CONCEPTS, get_all_concepts
 
 
 # ── Output helpers ──────────────────────────────────────────────────────────
@@ -119,10 +101,7 @@ def _resolve_cik(ticker):
 # ── SEC metadata lookup ────────────────────────────────────────────────────
 
 def _find_filing_meta(ticker, accession):
-    """Look up a specific filing's metadata from the SEC submissions API.
-
-    Returns dict with cik, name, form, primary_doc, filed_date or None.
-    """
+    """Look up a specific filing's metadata from the SEC submissions API."""
     cik, name = _resolve_cik(ticker)
     if not cik:
         return None
@@ -143,12 +122,8 @@ def _find_filing_meta(ticker, accession):
 # ── Section index builder ───────────────────────────────────────────────────
 
 def _build_index(ticker, form, accession, primary_doc):
-    """Build section index for a single filing. Returns TOC summary or None.
-
-    For XBRL filings, also indexes the main HTML document's TOC sections
-    so that narrative items (MD&A, audit fees, risk factors, etc.) are searchable.
-    """
-    from section_indexer import (
+    """Build section index for a single filing. Returns TOC summary or None."""
+    from edgar_lib.section_indexer import (
         index_xbrl_filing, index_html_filing,
         _get_sections_file, SECTIONS_INDEX_DIR,
     )
@@ -184,7 +159,7 @@ def _build_index(ticker, form, accession, primary_doc):
             with open(sections_file, "w", encoding="utf-8") as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
 
-    from section_search import get_toc
+    from edgar_lib.section_search import get_toc
     toc = get_toc(ticker, form, accession)
     if toc:
         return {
@@ -403,7 +378,7 @@ def cmd_toc(args):
     form = args.form
     accession = args.accession.strip()
 
-    from section_search import get_toc as _get_toc
+    from edgar_lib.section_search import get_toc as _get_toc
 
     toc = _get_toc(ticker, form, accession)
     if not toc:
@@ -425,7 +400,7 @@ def cmd_section(args):
     accession = args.accession.strip()
     section_id = args.section_id.strip()
 
-    from section_search import read_section as _read_section
+    from edgar_lib.section_search import read_section as _read_section
 
     result = _read_section(ticker, form, accession, section_id)
     if not result:
@@ -439,7 +414,7 @@ def cmd_search(args):
     ticker = args.ticker.upper().strip()
     keyword = args.keyword.strip()
 
-    from section_search import keyword_search as _kw_search
+    from edgar_lib.section_search import keyword_search as _kw_search
 
     result = _kw_search(ticker, keyword, form_type=args.form)
     if result["total_matches"] == 0:
@@ -460,7 +435,7 @@ def cmd_concept(args):
         _err(f"Unknown concept: '{key}'. Run 'concept' without args to list all.")
         return
 
-    from section_search import search_by_concept as _concept_search
+    from edgar_lib.section_search import search_by_concept as _concept_search
 
     result = _concept_search(key, ticker=args.ticker, form_type=args.form)
     _out(result)
@@ -473,7 +448,7 @@ def cmd_fpage(args):
         return
     _, _, primary_doc = result
 
-    from fpage_extractor import extract_fpage_md
+    from edgar_lib.fpage_extractor import extract_fpage_md
     md, fy = extract_fpage_md(ticker, form, accession, primary_doc)
     if md:
         _out({"ticker": ticker, "form": form, "accession": accession,
@@ -489,7 +464,7 @@ def cmd_fpages(args):
         return
     _, _, primary_doc = result
 
-    from fpage_extractor import extract_financial_pages_md
+    from edgar_lib.fpage_extractor import extract_financial_pages_md
     md, fy = extract_financial_pages_md(ticker, form, accession, primary_doc)
     if md:
         _out({"ticker": ticker, "form": form, "accession": accession,
