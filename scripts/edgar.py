@@ -173,56 +173,52 @@ def _build_index(ticker, form, accession, primary_doc):
 
 # ── File downloader ─────────────────────────────────────────────────────────
 
-_SKIP = ("index-headers", "-index.", "filings.xml", "rss.xml")
-
-
-def _download_filing_files(cik, ticker, form, accession):
-    """Download all filing files (HTM, MD, XML). Returns (downloaded_list, filing_dir)."""
+def _download_filing_files(cik, ticker, form, accession, primary_doc=""):
+    """Download primary document only (HTM + MD). Returns (downloaded_list, filing_dir)."""
     fdir = get_filing_dir(ticker, form, accession)
     acc_nd = accession.replace("-", "")
     base = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{acc_nd}"
 
-    dir_files = []
-    try:
-        listing = fetch_filing_directory(cik, accession)
-        dir_files = listing.get("directory", {}).get("item", [])
-    except Exception:
-        pass
-
     downloaded = []
 
-    for fi in dir_files:
-        fname = fi["name"]
-        if any(p in fname.lower() for p in _SKIP):
-            continue
+    # Determine primary document filename
+    target = primary_doc
+    if not target:
+        try:
+            listing = fetch_filing_directory(cik, accession)
+            items = listing.get("directory", {}).get("item", [])
+            htms = [i["name"] for i in items if i["name"].endswith((".htm", ".html"))]
+            # Prefer non-R-section files (primary doc), skip R*.htm
+            non_r = [f for f in htms if not (f.startswith("R") and len(f) > 1 and f[1].isdigit())]
+            if non_r:
+                target = non_r[0]
+            elif htms:
+                target = htms[0]
+        except Exception:
+            pass
 
-        if fname.endswith((".htm", ".html")):
-            html_path = os.path.join(fdir, fname)
-            md_path = os.path.join(fdir, fname.rsplit(".", 1)[0] + ".md")
+    if not target:
+        return downloaded, fdir
 
-            if not os.path.exists(html_path):
-                try:
-                    download_file(f"{base}/{fname}", html_path)
-                    downloaded.append({"file": fname, "type": "html"})
-                except Exception as e:
-                    downloaded.append({"file": fname, "type": "html", "error": str(e)[:100]})
-                    continue
+    html_path = os.path.join(fdir, target)
+    md_path = os.path.join(fdir, target.rsplit(".", 1)[0] + ".md")
 
-            if os.path.exists(html_path) and not os.path.exists(md_path):
-                with open(html_path, encoding="utf-8", errors="replace") as fh:
-                    html = fh.read()
-                with open(md_path, "w", encoding="utf-8") as fh:
-                    fh.write(convert_html_to_md(html))
-                downloaded.append({"file": fname.rsplit(".", 1)[0] + ".md", "type": "md"})
+    # Download HTM
+    if not os.path.exists(html_path):
+        try:
+            download_file(f"{base}/{target}", html_path)
+            downloaded.append({"file": target, "type": "html"})
+        except Exception as e:
+            downloaded.append({"file": target, "type": "html", "error": str(e)[:100]})
+            return downloaded, fdir
 
-        elif fname.endswith(".xml"):
-            xml_path = os.path.join(fdir, fname)
-            if not os.path.exists(xml_path):
-                try:
-                    download_file(f"{base}/{fname}", xml_path)
-                    downloaded.append({"file": fname, "type": "xml"})
-                except Exception:
-                    pass
+    # Convert to MD
+    if os.path.exists(html_path) and not os.path.exists(md_path):
+        with open(html_path, encoding="utf-8", errors="replace") as fh:
+            html = fh.read()
+        with open(md_path, "w", encoding="utf-8") as fh:
+            fh.write(convert_html_to_md(html))
+        downloaded.append({"file": target.rsplit(".", 1)[0] + ".md", "type": "md"})
 
     return downloaded, fdir
 
@@ -237,8 +233,6 @@ def _ensure_downloaded(ticker, form, accession):
         return None
 
     fdir = get_filing_dir(ticker, form, accession)
-    if not os.path.isdir(fdir) or not os.listdir(fdir):
-        _download_filing_files(cik, ticker, form, accession)
 
     idx = load_filings_index()
     key = f"{ticker}_{form}_{accession.replace('-', '')}"
@@ -248,6 +242,9 @@ def _ensure_downloaded(ticker, form, accession):
         meta = _find_filing_meta(ticker, accession)
         if meta:
             primary_doc = meta["primary_doc"]
+
+    if not os.path.isdir(fdir) or not os.listdir(fdir):
+        _download_filing_files(cik, ticker, form, accession, primary_doc)
 
     return cik, name, primary_doc
 
@@ -352,7 +349,9 @@ def cmd_download(args):
     form = meta["form"]
     primary_doc = meta["primary_doc"]
 
-    downloaded, fdir = _download_filing_files(meta["cik"], ticker, form, accession)
+    downloaded, fdir = _download_filing_files(
+        meta["cik"], ticker, form, accession, primary_doc
+    )
 
     idx = load_filings_index()
     key = f"{ticker}_{form}_{accession.replace('-', '')}"
@@ -363,6 +362,7 @@ def cmd_download(args):
     }
     save_filings_index(idx)
 
+    # Build section index from primary doc HTML (no XBRL R-sections needed)
     toc_summary = _build_index(ticker, form, accession, primary_doc)
 
     _out({
@@ -377,8 +377,9 @@ def cmd_download(args):
         "toc_available": toc_summary is not None,
         "toc_summary": toc_summary,
         "hint": (
+            "Files: primary HTM + MD in filing_dir. "
             "Use 'toc' to explore sections, 'section' to read content, "
-            "'fpages' to extract financial statements, 'fpage' for cover page."
+            "'fpages' to extract financial statements."
         ),
     })
 
