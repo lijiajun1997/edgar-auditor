@@ -22,14 +22,14 @@ sections in SEC filings using title and XBRL role matching.
 
 ```bash
 # List all concepts
-python scripts/edgar.py concept
+python skills/edgar-auditor/scripts/edgar.py concept
 
 # Search revenue recognition across all BABA filings
-python scripts/edgar.py concept revenue_recognition --ticker BABA
+python skills/edgar-auditor/scripts/edgar.py concept revenue_recognition --ticker BABA
 
 # Search audit fees in 20-F only
-python scripts/edgar.py concept audit_fees --ticker BABA --form 20-F
+python skills/edgar-auditor/scripts/edgar.py concept audit_fees --ticker BABA --form 20-F
 
 # Search going concern across all companies
-python scripts/edgar.py concept going_concern
+python skills/edgar-auditor/scripts/edgar.py concept going_concern
 ```

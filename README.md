@@ -42,7 +42,7 @@ That's it. Bundled `data/tickers.json` (10,380 SEC tickers) seeds the cache auto
 ### Verify
 
 ```bash
-python scripts/edgar.py lookup AAPL
+python skills/edgar-auditor/scripts/edgar.py lookup AAPL
 # {"found": true, "ticker": "AAPL", "cik": "0000320193", "name": "Apple Inc."}
 ```
 
@@ -84,31 +84,31 @@ filings → {accession,      toc → {sections[]}           section → {content
 
 ```bash
 # Find company
-python scripts/edgar.py lookup BABA
+python skills/edgar-auditor/scripts/edgar.py lookup BABA
 
 # List recent 20-F filings
-python scripts/edgar.py filings BABA --form 20-F --limit 3
+python skills/edgar-auditor/scripts/edgar.py filings BABA --form 20-F --limit 3
 
 # Download a specific filing
-python scripts/edgar.py download BABA 0000950170-24-063767
+python skills/edgar-auditor/scripts/edgar.py download BABA 0000950170-24-063767
 
 # Browse sections
-python scripts/edgar.py toc BABA 20-F 0000950170-24-063767
+python skills/edgar-auditor/scripts/edgar.py toc BABA 20-F 0000950170-24-063767
 
 # Read a specific section (e.g., Income Statement)
-python scripts/edgar.py section BABA 20-F 0000950170-24-063767 R2
+python skills/edgar-auditor/scripts/edgar.py section BABA 20-F 0000950170-24-063767 R2
 
 # Search by keyword
-python scripts/edgar.py search BABA "variable interest" --form 20-F
+python skills/edgar-auditor/scripts/edgar.py search BABA "variable interest" --form 20-F
 
 # Search by financial concept
-python scripts/edgar.py concept audit_fees --ticker BABA --form 20-F
+python skills/edgar-auditor/scripts/edgar.py concept audit_fees --ticker BABA --form 20-F
 
 # Extract cover page
-python scripts/edgar.py fpage BABA 20-F 0000950170-24-063767
+python skills/edgar-auditor/scripts/edgar.py fpage BABA 20-F 0000950170-24-063767
 
 # Extract full financial statements
-python scripts/edgar.py fpages BABA 20-F 0000950170-24-063767
+python skills/edgar-auditor/scripts/edgar.py fpages BABA 20-F 0000950170-24-063767
 ```
 
 ## Financial Concepts

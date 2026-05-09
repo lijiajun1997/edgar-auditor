@@ -103,8 +103,8 @@ download BABA <accession>
 ### lookup
 
 ```bash
-python scripts/edgar.py lookup AAPL
-python scripts/edgar.py lookup "Apple Inc"
+python skills/edgar-auditor/scripts/edgar.py lookup AAPL
+python skills/edgar-auditor/scripts/edgar.py lookup "Apple Inc"
 ```
 
 Exact ticker match first, then fuzzy name search. Auto-refreshes from SEC on miss.
@@ -114,7 +114,7 @@ Output: `{found, ticker, cik, name}` or `{found, matches[{ticker, cik, name}]}`
 ### filings
 
 ```bash
-python scripts/edgar.py filings AAPL --form 10-K --from 2024-01-01 --limit 5
+python skills/edgar-auditor/scripts/edgar.py filings AAPL --form 10-K --from 2024-01-01 --limit 5
 ```
 
 Options: `--form TYPE` `--from YYYY-MM-DD` `--to YYYY-MM-DD` `--limit N`
@@ -124,7 +124,7 @@ Output: `{ticker, company_name, filings[{form, filed_date, accession, primary_do
 ### download
 
 ```bash
-python scripts/edgar.py download AAPL 0000320193-24-000123
+python skills/edgar-auditor/scripts/edgar.py download AAPL 0000320193-24-000123
 ```
 
 Downloads all HTM/HTML files, converts to MD, fetches XML exhibits, builds section
@@ -135,18 +135,18 @@ Output: `{form, filing_dir, downloaded_files[], toc_summary{sections[]}, hint}`
 ### toc / section / search / concept
 
 ```bash
-python scripts/edgar.py toc AAPL 10-K 0000320193-24-000123
-python scripts/edgar.py section AAPL 10-K 0000320193-24-000123 R15
-python scripts/edgar.py search AAPL "revenue recognition"
-python scripts/edgar.py concept                              # list all 12 concepts
-python scripts/edgar.py concept revenue_recognition --ticker AAPL
+python skills/edgar-auditor/scripts/edgar.py toc AAPL 10-K 0000320193-24-000123
+python skills/edgar-auditor/scripts/edgar.py section AAPL 10-K 0000320193-24-000123 R15
+python skills/edgar-auditor/scripts/edgar.py search AAPL "revenue recognition"
+python skills/edgar-auditor/scripts/edgar.py concept                              # list all 12 concepts
+python skills/edgar-auditor/scripts/edgar.py concept revenue_recognition --ticker AAPL
 ```
 
 ### fpage / fpages
 
 ```bash
-python scripts/edgar.py fpage BABA 20-F 0001577552-25-000001    # cover page
-python scripts/edgar.py fpages BABA 20-F 0001577552-25-000001   # financial statements
+python skills/edgar-auditor/scripts/edgar.py fpage BABA 20-F 0001577552-25-000001    # cover page
+python skills/edgar-auditor/scripts/edgar.py fpages BABA 20-F 0001577552-25-000001   # financial statements
 ```
 
 - `fpage`: Cover page (before TABLE OF CONTENTS) — company name, FY, auditor, etc.
