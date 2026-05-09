@@ -79,10 +79,24 @@ def _err(msg):
 
 # ── Ticker management ───────────────────────────────────────────────────────
 
+_BUNDLED_TICKERS = os.path.join(_SCRIPT_DIR, "..", "data", "tickers.json")
+
+
 def _ensure_tickers():
-    """Download ticker data if cache is missing or too small."""
+    """Download ticker data if cache is missing or too small.
+
+    If project has no tickers.json, seed from bundled copy first.
+    """
     tickers = load_tickers()
     if len(tickers) < 100:
+        if os.path.isfile(_BUNDLED_TICKERS):
+            with open(_BUNDLED_TICKERS, encoding="utf-8") as f:
+                bundled = json.load(f)
+            if len(bundled) >= 100:
+                save_tickers(bundled)
+                tickers = bundled
+                print(f"Seeded {len(tickers)} tickers from bundled cache.", file=sys.stderr)
+                return tickers
         print("Downloading SEC ticker data...", file=sys.stderr)
         tickers = fetch_all_tickers()
         save_tickers(tickers)
