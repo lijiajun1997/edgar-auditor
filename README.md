@@ -27,25 +27,17 @@ Supported forms: **10-K, 10-Q, 20-F, 6-K, 8-K, F-1, S-1** and more.
 - Python 3.10+
 - [edgar-crawler-src](https://github.com/) project (core parsing engine)
 
-### Install
-
-```bash
-pip install requests beautifulsoup4 lxml markdownify
-```
-
 ### Setup as Claude Code Skill
 
 Copy the entire `edgar-auditor` directory to your Claude Code skills folder:
 
 ```bash
-# Option 1: Direct copy
 cp -r edgar-auditor ~/.claude/skills/
-
-# Option 2: Set project directory via environment variable
-export EDGAR_PROJECT_DIR=/path/to/edgar-crawler-src
 ```
 
-That's it. First run auto-downloads the SEC ticker database (~10,000 tickers, cached locally).
+That's it. Bundled `data/tickers.json` (10,380 SEC tickers) seeds the cache automatically on first run.
+
+> **Note**: Dependencies (requests, beautifulsoup4, lxml, markdownify) should be pre-installed in your environment. Do NOT install them unless you see `ModuleNotFoundError`.
 
 ### Verify
 
@@ -159,9 +151,7 @@ The CLI tool imports from [edgar-crawler-src](https://github.com/) which provide
 ## Requirements
 
 - Python >= 3.10
-- `requests` — HTTP client
-- `beautifulsoup4` + `lxml` — HTML/XML parsing
-- `markdownify` — HTML to Markdown conversion
+- Pre-installed: `requests`, `beautifulsoup4`, `lxml`, `markdownify`
 - [edgar-crawler-src](https://github.com/) project (core engine)
 
 ## License
