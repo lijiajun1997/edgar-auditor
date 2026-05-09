@@ -45,7 +45,7 @@ before you can search, read sections, or extract f-pages from it.
 |---------|-------------|-------------|
 | `init` | Download ticker data | Auto-runs on first use; rarely needed manually |
 | `lookup QUERY` | Find company by ticker or name | Starting point — resolve any company name to ticker/CIK |
-| `filings TICKER [opts]` | List SEC filings with filters | Browse what's available for a company |
+| `filings TICKER [opts]` | List auditor-relevant filings with filters | Browse what's available; use `--all` for all types |
 | `download TICKER ACCESSION` | Fetch filing files + build index | **Always** before search/section/fpages |
 | `toc TICKER FORM ACCESSION` | Show section structure | See what's inside a filing |
 | `section TICKER FORM ACC ID` | Read one section's full content | Extract specific data (revenue note, audit report, etc.) |
@@ -115,7 +115,10 @@ Output: `{found, ticker, cik, name}` or `{found, matches[{ticker, cik, name}]}`
 python skills/edgar-auditor/scripts/edgar.py filings AAPL --form 10-K --from 2024-01-01 --limit 5
 ```
 
-Options: `--form TYPE` `--from YYYY-MM-DD` `--to YYYY-MM-DD` `--limit N`
+Options: `--form TYPE` `--from YYYY-MM-DD` `--to YYYY-MM-DD` `--limit N` `--all`
+
+By default only shows auditor-relevant forms (10-K, 10-Q, 20-F, 6-K, 8-K, F-1, S-1, 424B*).
+Use `--all` to include all filing types (EFFECT, SC 13D, form 3/4/5, etc.).
 
 Output: `{ticker, company_name, filings[{form, filed_date, accession, primary_document}]}`
 

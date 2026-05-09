@@ -289,6 +289,15 @@ def cmd_lookup(args):
             _out({"found": False, "query": query, "hint": "Company not found in SEC database"})
 
 
+_AUDITOR_FORMS = {
+    "20-F", "10-K", "10-Q", "8-K",
+    "F-1", "F-1/A", "F-3", "F-3/A", "F-4", "F-4/A",
+    "S-1", "S-1/A", "S-3", "S-3/A", "S-4", "S-4/A",
+    "6-K",
+    "424B1", "424B2", "424B3", "424B4", "424B5", "424B7", "424B8",
+}
+
+
 def cmd_filings(args):
     ticker = args.ticker.upper().strip()
     cik, name = _resolve_cik(ticker)
@@ -306,6 +315,8 @@ def cmd_filings(args):
     results = []
     for i in range(len(forms)):
         if args.form and forms[i] != args.form:
+            continue
+        if not args.all and forms[i] not in _AUDITOR_FORMS:
             continue
         if args.from_date and dates[i] < args.from_date:
             continue
@@ -482,6 +493,7 @@ def main():
     p.add_argument("--from", dest="from_date", help="Start date (YYYY-MM-DD)")
     p.add_argument("--to", dest="to_date", help="End date (YYYY-MM-DD)")
     p.add_argument("--limit", type=int, help="Max results")
+    p.add_argument("--all", action="store_true", help="Show all filing types (default: auditor-relevant only)")
     p.set_defaults(func=cmd_filings)
 
     p = sub.add_parser("download", help="Download filing (HTM + MD + index)")
